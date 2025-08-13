@@ -1,0 +1,87 @@
+---
+- name: Automated Server Down/Hung Issue Investigation and Resolution
+  hosts: all
+  gather_facts: no
+  vars:
+    owner_email: "server.owner@example.com"
+    escalate_email: "jorge.hugo@example.com"
+    wait_minutes: 15
+
+  tasks:
+    - name: Step 1 - Ping the server
+      ansible.builtin.shell: ping -c 2 {{ inventory_hostname }}
+      register: ping_result
+      ignore_errors: yes
+
+    - name: Step 2 - Mark status based on ping
+      set_fact:
+        server_status: "reachable"
+      when: ping_result.rc == 0
+
+    - name: Step 3 - If unreachable, check cloud provider (Azure/AWS)
+      set_fact:
+        platform: >-
+          {% if inventory_hostname.startswith('10.136') or inventory_hostname.startswith('10.137') %}AWS{% elif inventory_hostname.startswith('10.236') or inventory_hostname.startswith('10.237') %}Azure{% else %}Unknown{% endif %}
+      when: ping_result.rc != 0
+
+    - name: Step 4 - Attempt to get VM status from cloud CLI (mock)
+      ansible.builtin.shell: "echo 'running'"
+      register: vm_status
+      when: ping_result.rc != 0
+
+    - name: Step 5 - Notify owner if server is down
+      ansible.builtin.mail:
+        host: localhost
+        port: 25
+        to: "{{ owner_email }}"
+        subject: "[ALERT] {{ inventory_hostname }} is DOWN on {{ platform }}"
+        body: "The server {{ inventory_hostname }} is unreachable. Platform detected: {{ platform }}. Please validate and approve restart. Waiting {{ wait_minutes }} minutes before escalation."
+      when: ping_result.rc != 0
+
+    - name: Step 6 - Wait for 15 minutes before escalation
+      ansible.builtin.pause:
+        minutes: "{{ wait_minutes }}"
+      when: ping_result.rc != 0
+
+    - name: Step 7 - Escalate to Hugo/Jorge
+      ansible.builtin.mail:
+        host: localhost
+        port: 25
+        to: "{{ escalate_email }}"
+        subject: "[ESCALATION] No Response for {{ inventory_hostname }} DOWN Alert"
+        body: "The server {{ inventory_hostname }} remains down. No response from owner. Please take immediate action."
+      when: ping_result.rc != 0
+
+    - name: Step 8 - Check system health if server is reachable (Linux only)
+      when: server_status == "reachable"
+      block:
+        - name: Check uptime
+          ansible.builtin.shell: uptime
+          register: uptime_output
+
+        - name: Check memory usage
+          ansible.builtin.shell: free -m
+          register: mem_output
+
+        - name: Check CPU load
+          ansible.builtin.shell: top -bn1 | head -n 5
+          register: cpu_output
+
+        - name: Save report
+          copy:
+            dest: "/tmp/{{ inventory_hostname }}_health_report.txt"
+            content: |
+              Server: {{ inventory_hostname }}
+              Uptime:
+              {{ uptime_output.stdout }}
+
+              Memory:
+              {{ mem_output.stdout }}
+
+              CPU:
+              {{ cpu_output.stdout }}
+
+    - name: Step 9 - Close incident (mock)
+      ansible.builtin.debug:
+        msg: "Incident closed for {{ inventory_hostname }}. Server healthy."
+      when: server_status == "reachable"
