@@ -1,0 +1,40 @@
+README: 🧠 Memory Critical Alert Automation for Windows Servers
+
+📖 Overview  
+->Automates monitoring of physical memory usage on Windows servers in Azure. 
+->The script checks if memory usage exceeds a threshold (default 80%) and sends alert emails. 
+->If memory usage is normal, it resolves the incident and attaches a snapshot of memory usage.
+
+---
+
+✨ Features  
+- ✅ Ping server to verify availability  
+- 💽 Query physical memory usage remotely  
+- ⚠️ Send alert emails if memory usage is critical  
+- 📩 Send resolution email with memory snapshot if usage is normal  
+- 🔐 Requires jump box credentials for secure access  
+- 🔄 Can be scheduled or triggered by incident management tools  
+
+---
+
+🛠️ Prerequisites  
+- PowerShell 7+ installed  
+- Network and admin access to Azure jump box and target server  
+- PowerShell Remoting enabled on target server  
+- SMTP server and credentials configured for sending emails  
+- Access to CyberArk or secure vault for credentials (optional)  
+
+---
+
+▶️ Usage  
+1. Update script variables for server IP, credentials, SMTP details, threshold values.  
+2. Run script on a machine with network access and PowerShell 7+.  
+3. Monitor email notifications for alerts and resolutions.  
+4. Integrate with incident management system for auto acknowledgement and closure if needed.  
+
+---
+
+📝 Notes  
+- Ensure credentials are stored securely; avoid hardcoding passwords in scripts.  
+- Script simulates memory snapshot by saving usage details to a text file.  
+- Extend with actual screenshot capture or advanced monitoring as needed.  
