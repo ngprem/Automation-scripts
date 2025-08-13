@@ -1,0 +1,94 @@
+Server Down or Hung Issue Investigation & Resolution Automation
+
+This project provides an Ansible-based automation to:
+
+✅ Investigate server down or hung alerts for AWS & Azure environments.
+📊 Check server reachability, uptime, CPU, and memory usage.
+📧 Notify and escalate to server owners or higher authorities if needed.
+🔄 Restart servers with owner approval.
+
+📌 Overview
+Step 1: Acknowledge the Incident
+- Assign the ticket to yourself and set it to "In Progress".
+
+Step 2: Identify the Server Platform
+- AWS servers: IP starts with 10.136 or 10.137.
+- Azure servers: IP starts with 10.236 or 10.237.
+
+Step 3: Check Server Status
+1. Verify in AWS or Azure portal.
+2. Ping the server from WVD (Windows Virtual Desktop).
+3. If reachable, login and check uptime, CPU, and memory usage.
+4. For Linux: use uptime, free -m, top, and lsblk.
+5. For Windows: use Task Manager for CPU/Memory utilization.
+
+Step 4: If Unreachable
+- Determine platform based on IP range.
+- Notify the server owner for restart approval via email.
+- Wait 10–15 minutes for a response.
+- If no response, escalate to Jorge or Hugo via email or Slack.
+
+Step 5: Restart (If Approved)
+- Stop the server in the portal.
+- Start the server in the portal.
+
+⚙️ Prerequisites
+1. Ansible Control Node Requirements:
+- Python 3.x installed.
+- Ansible installed (v2.9 or higher recommended).
+- Mail server configured for sending alerts.
+
+2. Target Server Requirements:
+- SSH access enabled for Linux servers.
+- RDP access for Windows servers.
+- Required cloud CLI tools configured if directly querying Azure/AWS.
+
+3. Authentication & Inventory Setup:
+- SSH key-based authentication for Linux targets.
+- Ansible inventory must list server hostnames/IPs.
+
+🔐 Required Permissions
+Scope	Permission Required	Purpose
+Target Linux Servers	sudo privileges	To check uptime, memory, CPU
+Cloud Portals	Access to start/stop VMs	To restart servers if approved
+Mail Server	Send permissions	To notify and escalate incidents
+
+📂 Folder Structure
+server_down_automation/
+│
+├── inventory.yml
+├── server_down.yml   <-- The main playbook
+└── README.txt
+
+▶️ How It Works
+📝 Step 1: Ping Server
+- If ping succeeds: proceed with health checks.
+- If ping fails: determine platform and send owner notification.
+
+📧 Step 2: Notify & Escalate
+- Email owner with server down alert and request for restart approval.
+- Wait configured time (default 15 minutes).
+- Escalate if no response.
+
+🧾 Step 3: Health Checks
+- For Linux: uptime, free -m, top (CPU), lsblk.
+- Save report to /tmp/<hostname>_health_report.txt.
+
+📄 Sample Inventory File (inventory.yml)
+all:
+  hosts:
+    10.136.12.34:
+      ansible_user: <linux-user>
+      ansible_ssh_private_key_file: <path-to-private-key>
+
+▶️ Run the Playbook
+ansible-playbook -i inventory.yml server_down.yml
+
+📤 Outputs
+✅ Health report file for reachable servers.
+✅ Email alerts sent for unreachable servers.
+✅ Escalation email if no response from owner.
+
+⚠️ Notes
+- Do not restart servers without explicit owner approval.
+- Always verify server health before closing the ticket.
