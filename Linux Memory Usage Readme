@@ -1,0 +1,73 @@
+Linux Memory Usage Validation & Cache Cleanup Automation
+
+This project provides an Ansible-based automation to:
+
+✅ Validate memory usage on Linux servers when a memory alert is triggered.
+🧹 Clear buffer/cache from memory after getting application team approval.
+
+📌 Overview
+Step 1: Validate Memory Usage
+- Connects to the target Linux server(s).
+- Checks current memory usage (free -g).
+- Displays memory stats for review.
+
+Step 2: Clear Cache & Buffers
+- Pauses for confirmation from the application team before taking action.
+- Clears the buffer/cache (sync; echo 1 > /proc/sys/vm/drop_caches).
+- Checks and displays memory usage after cleanup.
+
+⚙️ Prerequisites
+1. Ansible Control Node Requirements:
+- Python 3.x installed.
+- Ansible installed (v2.9 or higher recommended).
+
+2. Target Linux Server Requirements:
+- SSH access enabled.
+- free command available (comes with procps package).
+- Sudo privileges for the Ansible user.
+
+3. Authentication & Inventory Setup:
+- SSH key-based authentication between the Ansible control node and the target servers.
+- Target servers defined in the Ansible inventory under the group linux_servers.
+
+🔐 Required Permissions
+Scope	Permission Required	Purpose
+Target Linux Servers	sudo privileges	To execute memory checks and clear cache/buffers
+
+📂 Folder Structure
+memory_cleanup/
+│
+├── inventory.yml
+├── memory_cleanup.yml   <-- The main playbook
+└── README.txt
+
+▶️ How It Works
+📝 Step 1: Validate Memory Usage
+Playbook Task:
+- Runs free -g to capture the current memory usage.
+- Displays the results to the operator.
+
+🧹 Step 2: Clear Cache (With Approval)
+Playbook Task:
+- Prompts the user for application team approval before proceeding.
+- Clears cache and buffer memory using:
+  sync; echo 1 > /proc/sys/vm/drop_caches
+- Re-runs free -g to confirm the changes.
+
+📄 Sample Inventory File (inventory.yml)
+all:
+  hosts:
+    aws-lx-omsd06.hbc.com:
+      ansible_user: <your-ssh-username>
+      ansible_ssh_private_key_file: <path-to-private-key>
+
+▶️ Run the Playbook
+ansible-playbook -i inventory.yml memory_cleanup.yml
+
+📤 Outputs
+✅ Initial Memory Report (before cleanup) — displayed in console.
+✅ Post-Cleanup Memory Report — displayed in console for comparison.
+
+⚠️ Notes
+- Always confirm with the application team before clearing caches to avoid unintended performance impact.
+- This automation does not modify swap or restart services; it only clears page cache, dentries, and inodes.
