@@ -1,0 +1,28 @@
+---
+- name: Validate and Clear Memory on Linux Server
+  hosts: linux_servers
+  become: true
+  tasks:
+
+    - name: Check initial memory usage
+      shell: free -g
+      register: initial_memory
+
+    - name: Show initial memory usage
+      debug:
+        msg: "{{ initial_memory.stdout_lines }}"
+
+    - name: Pause to confirm with application team
+      pause:
+        prompt: "Do you have approval from App team to clear cache? Press Enter to continue"
+
+    - name: Clear cache and buffer
+      shell: sync; echo 1 > /proc/sys/vm/drop_caches
+
+    - name: Check memory usage after clearing cache
+      shell: free -g
+      register: after_memory
+
+    - name: Show memory usage after cache clear
+      debug:
+        msg: "{{ after_memory.stdout_lines }}"
