@@ -1,0 +1,44 @@
+README: 🖥️ Disk Space Alert Automation for Windows Servers (C:\ Drive)
+
+📖 Overview  
+This script automates incident handling for Windows servers when free disk space on the C: drive falls below **20%**. It checks disk space, identifies large folders, and sends email alerts to server owners for cleanup or escalation.
+
+---
+
+✨ Features  
+- ✅ Acknowledge and track incidents manually or via system  
+- 🔍 Verify server and environment in Azure portal  
+- 🔐 Login through Azure jump box with provided credentials  
+- 📡 Ping target server to check availability  
+- 💽 Check free disk space remotely  
+- 📁 Analyze folder sizes (using TreeSize or PowerShell)  
+- 📧 Notify server owners/application teams via email  
+- 🧹 Suggest cleanup of memory dumps, old logs, and large user folders  
+- ⚠️ Coordinate disk space expansion through Change Request if needed  
+
+---
+
+🛠️ Prerequisites  
+- PowerShell 7+  
+- Access & credentials for Azure jump box  
+- Administrative access on target servers  
+- TreeSize installed on target servers (optional)  
+- SMTP details configured for sending email alerts  
+- Permissions for remote PowerShell execution  
+- Access to Azure portal or CMDB for owner info  
+
+---
+
+▶️ Usage  
+1. ✍️ Update script variables: server names, credentials, SMTP settings, thresholds.  
+2. 🖥️ Run PowerShell with admin rights on a machine with network access to jump box and servers.  
+3. ▶️ Execute the script manually or automate via scheduled tasks triggered by alerts.  
+4. 📬 Monitor emails and logs for cleanup and escalation status.  
+
+---
+
+📝 Notes  
+- 💾 Always snapshot disks before deleting files.  
+- 🤝 Coordinate with app teams before file removals.  
+- 📇 Keep server owner contacts up to date.  
+- 🔄 Consider integration with incident management tools for full automation.  
