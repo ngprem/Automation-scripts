@@ -1,0 +1,87 @@
+---
+- name: Run Pre & Post Checks on Linux Servers
+  hosts: linux_servers
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Get Server Name
+      command: uname -n
+      register: server_name
+
+    - name: Get System Type
+      command: uname -sm
+      register: system_type
+
+    - name: Get Kernel Version
+      command: uname -r
+      register: kernel_version
+
+    - name: Get System Uptime
+      command: uptime
+      register: system_uptime
+
+    - name: Get OS Release
+      command: cat /etc/redhat-release
+      register: os_release
+
+    - name: Get GRUB Details
+      shell: |
+        cat /boot/grub/grub.conf
+        cat /boot/grub2/grub.cfg
+        cat /etc/default/grub
+      register: grub_details
+
+    - name: Get Filesystem Count
+      command: df -ThP | grep -v tmpfs | grep -v Filesystem | grep -v grep | wc -l
+      register: fs_count
+
+    - name: Get Mounted Filesystems
+      command: df -ThP | grep -v tmpfs | grep -v grep
+      register: mounted_filesystems
+
+    - name: Get Network Interface Details
+      command: /sbin/ifconfig -a
+      register: network_interfaces
+
+    - name: Get Routing Details
+      command: netstat -rn
+      register: routing_details
+
+    - name: Get fstab Configuration
+      command: cat /etc/fstab
+      register: fstab_config
+
+    - name: Get sysctl Configuration
+      command: cat /etc/sysctl.conf
+      register: sysctl_config
+
+    - name: Get Disk Details
+      command: fdisk -l | grep sd | grep -v grep
+      register: disk_details
+
+    - name: Get PVs, VGs, LVs
+      shell: |
+        PVS
+        VGS
+        LVS
+      register: lvm_details
+
+    - name: Save Output to File
+      copy:
+        content: |
+          Server Name: {{ server_name.stdout }}
+          System Type: {{ system_type.stdout }}
+          Kernel Version: {{ kernel_version.stdout }}
+          System Uptime: {{ system_uptime.stdout }}
+          OS Release: {{ os_release.stdout }}
+          GRUB Details: {{ grub_details.stdout }}
+          Filesystem Count: {{ fs_count.stdout }}
+          Mounted Filesystems: {{ mounted_filesystems.stdout }}
+          Network Interfaces: {{ network_interfaces.stdout }}
+          Routing Details: {{ routing_details.stdout }}
+          fstab Configuration: {{ fstab_config.stdout }}
+          sysctl Configuration: {{ sysctl_config.stdout }}
+          Disk Details: {{ disk_details.stdout }}
+          LVM Details: {{ lvm_details.stdout }}
+        dest: "/tmp/Pre-Post-Check-{{ inventory_hostname }}.txt"
