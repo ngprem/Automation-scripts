@@ -1,0 +1,91 @@
+🖥️ Linux Pre & Post Checks Automation
+
+This project provides an Ansible-based automation to:
+
+✅ Collect detailed pre-checks from Linux servers before patching or changes.
+✅ Collect post-checks after patching or changes for validation.
+📄 Store all outputs in a structured report per server.
+
+------------------------------------------------------------
+📌 Overview
+The playbook captures and records key system information from Linux servers, including:
+
+🔹 Server Information
+  • 🏷️ Hostname
+  • 🖥️ System type (OS + architecture)
+  • 🧩 Kernel version
+  • 📀 OS release
+
+🔹 System Health
+  • ⏱️ Uptime
+  • 🌀 GRUB bootloader configuration
+  • ⚙️ Sysctl configuration
+
+🔹 Storage Details
+  • 📊 Filesystem count
+  • 💾 Mounted filesystems
+  • 📂 fstab configuration
+  • 💽 Disk details (via fdisk)
+  • 📦 LVM information (PVs, VGs, LVs)
+
+🔹 Network Information
+  • 🌐 Network interface details (ifconfig -a)
+  • 🛣️ Routing details (netstat -rn)
+
+------------------------------------------------------------
+⚙️ Prerequisites
+
+🖥️ Control Node Requirements
+  • 📌 Ansible v2.9+ installed
+  • 🔑 SSH access to target Linux servers
+
+📡 Managed Node Requirements
+  • 🐍 Python installed
+  • 👤 User with sudo privileges
+
+📁 Inventory File Setup
+Define target hosts under linux_servers:
+    [linux_servers]
+    server1 ansible_host=192.168.1.10
+    server2 ansible_host=192.168.1.11
+
+------------------------------------------------------------
+▶️ How It Works
+
+📝 Step 1: Gather Pre/Post Checks
+Playbook: pre_post_checks.yml
+
+• Connects to all servers in linux_servers group.
+• Executes commands to capture system, storage, and network state.
+• Registers command outputs into Ansible variables.
+
+📝 Step 2: Save Reports
+• Consolidates outputs into a formatted text file.
+• Saves report on the control node in:
+  /tmp/Pre-Post-Check-<hostname>.txt
+
+------------------------------------------------------------
+📄 Sample Format – Report Output
+
+🖥️ Server Name: server1.example.com
+🖥️ System Type: Linux x86_64
+🧩 Kernel Version: 4.18.0-425.19.2.el8.x86_64
+⏱️ System Uptime: 10:52:01 up 3 days,  4:21,  2 users,  load average: 0.15, 0.08, 0.05
+📀 OS Release: Red Hat Enterprise Linux release 8.8 (Ootpa)
+📊 Filesystem Count: 5
+💾 Mounted Filesystems:
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/sda1      ext4   40G   20G   18G  52% /
+...
+
+------------------------------------------------------------
+📤 Outputs
+
+✅ Server information report stored as:
+   /tmp/Pre-Post-Check-<hostname>.txt
+
+✅ Consolidated details covering:
+   • OS & Kernel
+   • Uptime & GRUB settings
+   • Filesystems, LVM, Disk details
+   • Network interfaces & routing
