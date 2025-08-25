@@ -1,0 +1,111 @@
+# README: Ansible Playbook to Check and Fix NTP Service
+
+## 📌 Overview
+This Ansible playbook is designed to check and fix the **NTP (Network Time Protocol) service** (`ntpd`) on affected Linux servers. It validates whether the `ntpd` service is running, starts it if necessary, and verifies the final service status.
+
+---
+
+## 📂 Files Included
+- **playbook.yml** → The Ansible playbook to check and fix NTP service.
+- **inventory.ini** → Inventory file defining the affected servers and connection details.
+
+---
+
+## ⚙️ Prerequisites
+1. **Ansible installed** on your control node (JumpBox / Admin server).
+   ```bash
+   sudo yum install ansible -y   # (RHEL/CentOS)
+   sudo apt-get install ansible -y   # (Ubuntu/Debian)
+   ```
+
+2. **SSH access** to target servers using:
+   - A valid private key (`fid.pem`).
+   - Correct `ansible_user` and `ansible_become_password` defined in `inventory.ini`.
+
+3. **NTP service package** (`ntp` or `ntpd`) must be installed on the target servers.
+
+4. **ProxyJump configuration** is already set in `inventory.ini` for routing via jump box.
+
+---
+
+## ▶️ How to Run the Playbook
+1. Navigate to the directory containing the playbook and inventory file.
+   ```bash
+   cd /path/to/playbook-directory
+   ```
+
+2. Run the playbook with the inventory file:
+   ```bash
+   ansible-playbook -i inventory.ini playbook.yml
+   ```
+
+3. (Optional) Run in verbose mode for troubleshooting:
+   ```bash
+   ansible-playbook -i inventory.ini playbook.yml -vvv
+   ```
+
+---
+
+## 🔍 Playbook Workflow
+1. **Check ntpd service status**
+   - Runs `systemctl is-active ntpd`.
+
+2. **Debug current status**
+   - Displays whether the service is `active` or not.
+
+3. **Start service if inactive**
+   - Uses `ansible.builtin.systemd` to start and enable the service.
+
+4. **Recheck service status**
+   - Runs another `systemctl is-active ntpd`.
+
+5. **Show final status**
+   - Confirms if the service is running after remediation.
+
+---
+
+## ✅ Example Output
+```
+TASK [Check if ntpd service is active] ****************************************
+ok: [aws-lx-omsdbp02]
+
+TASK [Debug current ntpd status] **********************************************
+ok: [aws-lx-omsdbp02] => {
+    "msg": "Current ntpd status on aws-lx-omsdbp02: inactive"
+}
+
+TASK [Start ntpd service if inactive] *****************************************
+changed: [aws-lx-omsdbp02]
+
+TASK [Recheck ntpd status after starting] *************************************
+ok: [aws-lx-omsdbp02]
+
+TASK [Show final service status] **********************************************
+ok: [aws-lx-omsdbp02] => {
+    "msg": "✅ Final ntpd status on aws-lx-omsdbp02: active"
+}
+```
+
+---
+
+## 🛠️ Troubleshooting
+- If you get `FAILED! => Unable to connect to host`, verify:
+  - Correct IP address in `inventory.ini`.
+  - Proper SSH key permissions:
+    ```bash
+    chmod 600 ~/.ssh/fid.pem
+    ```
+  - Jump box connectivity.
+
+- If the `ntpd` package is missing, install it manually:
+  ```bash
+  sudo yum install ntp -y     # RHEL/CentOS
+  sudo apt-get install ntp -y # Ubuntu/Debian
+  ```
+
+---
+
+## 📘 Notes
+- This playbook currently checks and fixes only the `ntpd` service.
+- Modify `systemctl` commands if you are using `chronyd` instead of `ntpd`.
+- Best practice: Run in a **test environment** before applying in production.
