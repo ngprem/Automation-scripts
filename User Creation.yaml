@@ -1,0 +1,57 @@
+---
+- name: Automate User Management Tasks
+  hosts: linux_servers
+  become: true
+  gather_facts: false
+
+  vars:
+    users:
+      - userid: user1
+        description: "Test User"
+        password: "password123"
+        sudo_access: true
+        sudo_command: "ALL"
+        state: present
+
+      - userid: user2
+        description: "Another Test User"
+        password: "password456"
+        sudo_access: false
+        state: absent
+
+  tasks:
+
+    # 1. Create or delete user based on state
+    - name: Ensure user exists or is absent
+      user:
+        name: "{{ item.userid }}"
+        comment: "{{ item.description }}"
+        password: "{{ item.password | password_hash('sha512') }}"
+        home: "/home/{{ item.userid }}"
+        state: "{{ item.state }}"
+      loop: "{{ users }}"
+
+    # 2. Reset password if the user exists (only if password is provided)
+    - name: Reset user password
+      command: echo "{{ item.userid }}:{{ item.password }}" | /bin/chpasswd
+      when: item.state == 'present' and item.password is defined
+      loop: "{{ users }}"
+
+    # 3. Configure Sudo access (if applicable)
+    - name: Grant Sudo access to user if required
+      lineinfile:
+        path: /etc/sudoers
+        regexp: "^{{ item.userid }} "
+        line: "{{ item.userid }} ALL=(ALL) NOPASSWD: {{ item.sudo_command }}"
+        validate: '/usr/sbin/visudo -cf %s'  # Ensures file validity
+      when: item.sudo_access == true
+      loop: "{{ users }}"
+
+    # 4. Remove Sudo access if not needed
+    - name: Remove Sudo access for users if not required
+      lineinfile:
+        path: /etc/sudoers
+        regexp: "^{{ item.userid }} "
+        state: absent
+      when: item.sudo_access == false
+      loop: "{{ users }}"
