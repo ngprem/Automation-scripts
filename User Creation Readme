@@ -1,0 +1,86 @@
+Linux User Management Automation
+
+This project provides an Ansible-based automation to:
+
+✅ Create or delete Linux users
+✅ Reset user passwords securely
+✅ Grant or revoke sudo access
+📄 Manage user details consistently across multiple servers
+
+------------------------------------------------------------
+📌 Overview
+The playbook simplifies user lifecycle management by automating:
+
+- User Account Management
+  • Create or delete users based on state (present / absent)
+  • Set user description and home directory
+
+- Password Management
+  • Configure password at creation
+  • Reset password for existing users
+
+- Sudo Management
+  • Grant sudo access (with custom commands)
+  • Remove sudo access if not required
+
+------------------------------------------------------------
+⚙️ Prerequisites
+
+- Control Node Requirements
+  • Ansible v2.9+ installed
+  • SSH access to Linux servers
+
+- Managed Node Requirements
+  • Python installed
+  • User with sudo privileges
+
+- Inventory File Setup
+  Define target hosts under linux_servers:
+    [linux_servers]
+    server1 ansible_host=192.168.1.10
+    server2 ansible_host=192.168.1.11
+
+------------------------------------------------------------
+▶️ How It Works
+
+Step 1: User Creation/Deletion
+• Ensures users are present or absent based on state.
+
+Step 2: Password Reset
+• If password is defined and user exists, resets it securely.
+
+Step 3: Sudo Access Management
+• Grants required sudo rights (NOPASSWD supported).
+• Removes sudo privileges if disabled.
+
+------------------------------------------------------------
+📂 Playbook Variables Example
+
+users:
+  - userid: user1
+    description: "Test User"
+    password: "password123"
+    sudo_access: true
+    sudo_command: "ALL"
+    state: present
+
+  - userid: user2
+    description: "Another Test User"
+    password: "password456"
+    sudo_access: false
+    state: absent
+
+------------------------------------------------------------
+📄 Sample Outcomes
+
+✅ User created: user1 with sudo access
+✅ Password reset applied to user1
+❌ User user2 removed (state=absent)
+🛡️ Sudo privileges updated in /etc/sudoers
+
+------------------------------------------------------------
+📤 Outputs
+
+• Consistent user management across servers
+• Secure password handling with SHA-512 hashing
+• Automated sudoers file validation (visudo)
