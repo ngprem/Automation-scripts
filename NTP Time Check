@@ -1,0 +1,43 @@
+---
+- name: Check and fix NTP service on affected Linux server
+  hosts: ntp_affected_servers
+  gather_facts: false
+  become: yes
+
+  tasks:
+
+    - name: Check if ntpd service is active
+      shell: systemctl is-active ntpd
+      register: ntpd_status
+      ignore_errors: true
+
+    - name: Debug current ntpd status
+      debug:
+        msg: "Current ntpd status on {{ inventory_hostname }}: {{ ntpd_status.stdout }}"
+
+    - name: Start ntpd service if inactive
+      ansible.builtin.systemd:
+        name: ntpd
+        state: started
+        enabled: true
+      when: ntpd_status.stdout != "active"
+
+    - name: Recheck ntpd status after starting
+      shell: systemctl is-active ntpd
+      register: ntpd_status_final
+
+    - name: Show final service status
+      debug:
+        msg: "✅ Final ntpd status on {{ inventory_hostname }}: {{ ntpd_status_final.stdout }}"
+
+inventory.ini
+[ntp_affected_servers]
+aws-lx-omsdbp02 ansible_host=10.136.x.x
+
+[ntp_affected_servers:vars]
+ansible_user=fiduser
+ansible_ssh_private_key_file=~/.ssh/fid.pem
+ansible_become_password=your_sudo_password
+
+# SSH Proxy via Jump Box (WVD → JumpBox → Target Server)
+ansible_ssh_common_args='-o ProxyJump=fiduser@azr-lx-ansp01'
